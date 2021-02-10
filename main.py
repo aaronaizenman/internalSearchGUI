@@ -1,5 +1,5 @@
 import tkinter as tk
-import class
+import class.py as class
 
 root = tk.Tk()
 app = class.Application(master=root)
