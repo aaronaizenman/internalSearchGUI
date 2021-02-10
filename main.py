@@ -1,6 +1,6 @@
 import tkinter as tk
-import class.py as class
+import classes
 
 root = tk.Tk()
-app = class.Application(master=root)
+app = classes.Application(master=root)
 app.mainloop()
