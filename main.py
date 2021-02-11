@@ -28,6 +28,9 @@ class App(tk.Frame):
         outputFrame = tk.Frame(topFrame)
         outputFrame.pack(side=tk.RIGHT, fill=tk.X)
 
+        outputFileFrame = tk.Frame(outputFrame)
+        outputFileFrame.pack(side=tk.BOTTOM)
+
         buttonFrame = tk.Frame(bottomFrame)
         buttonFrame.pack(side=tk.TOP, fill=tk.X)
 
@@ -56,6 +59,13 @@ class App(tk.Frame):
             box.pack()
             outputEntries.append((field, var))
             i += 1
+
+        row = tk.Frame(outputFileFrame)
+        row.pack()
+        ent = tk.Entry(row)
+        ent.pack(side=tk.RIGHT, expand=tk.YES, fill=tk.X)
+        lab = tk.Label(row, width=30, text="filepath/filename", anchor="w")
+        lab.pacl(side=tk.LEFT)
 
         # Add a text box at the bottom of the window, this is where the resulting query will be displayed
         row = tk.Frame(scriptFrame)
@@ -86,6 +96,7 @@ class App(tk.Frame):
         i = 0
         script = "/opt/apps/etl/CliClient internal-search "
 
+        #Add each query parameter to the script where specified
         for entry in queryEntries:
             if queryEntries[i][1].get() == "":
                 i += 1
@@ -124,6 +135,7 @@ class App(tk.Frame):
         i=0
         script = script + "--columns "
 
+        #Define the output columns based on the checkboxes
         for entry in outputEntries:
             if outputEntries[i][1].get() == 0:
                 i += 1
@@ -190,6 +202,11 @@ class App(tk.Frame):
                     script += "31,"
 
                 i += 1
+
+        #Remove the trailing comma
+
+
+        #If specified, add the filepath of the output file. Otherwise just print to console
 
         textBox.insert(tk.INSERT, script)
         textBox.config(state="disabled")
