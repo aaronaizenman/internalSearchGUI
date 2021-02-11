@@ -1,5 +1,5 @@
 import tkinter as tk
-from math import floor
+from math import floor, ceil
 
 class App(tk.Frame):
     def __init__(self, master=None):
@@ -13,7 +13,7 @@ class App(tk.Frame):
         queryFields = "Start Date (yyyymmddhhMMSS)", "End Date (yyyymmddhhMMSS)", "Client Short ID", "Message Type (MT, MO, NL)", "System Type (PE, XMS, CA, NOBILL)", "Site", "Country (2 letter ISO Code)", "Operator ID", "MO State", "MT State", "MT Status", "Limit", "Timeout", "Format (txt, csv, tsv)"
 
         # Define the fields that are eligible for output
-        outputFields = "Day", "SinchMessageID", "associations.kind", "Site (EU3C, EU1C, etc...)", "Client Account ID", "Client Short ID", "Connection ID", "Connection Internal ID", "Client ID", "ALC_ID", "client_in", "client_out", "country", "dfb_on", "dfb_rec", "dr_error", "MSISDN", "Operator ID", "State", "Status Ind", "Supp In", "Supp Out", "Virtual Number", "NPI", "TON", "Timestamp", "Batch ID", "Site (EU1X, EU3X, etc...)", "System", "Type"
+        outputFields = "Day", "SinchMessageID", "associations.kind", "Site (EU3C, EU1C, etc...)", "Client Account ID", "Client Short ID", "Connection ID", "Connection Internal ID", "Client ID", "ALC_ID", "client_in", "client_out", "concat_id", "concat_part", "concat_parts", "country", "dfb_on", "dfb_rec", "dr_error", "MSISDN", "Operator ID", "State", "Status Ind", "Supp In", "Supp Out", "Virtual Number", "NPI", "TON", "Timestamp", "Batch ID", "Site (EU1X, EU3X, etc...)", "System", "Type"
 
         # Create all of my frames to arrange the window
         topFrame = tk.Frame()
@@ -27,9 +27,6 @@ class App(tk.Frame):
 
         outputFrame = tk.Frame(topFrame)
         outputFrame.pack(side=tk.RIGHT, fill=tk.X)
-
-        outputFileFrame = tk.Frame(outputFrame)
-        outputFileFrame.pack(side=tk.BOTTOM)
 
         buttonFrame = tk.Frame(bottomFrame)
         buttonFrame.pack(side=tk.TOP, fill=tk.X)
@@ -60,12 +57,15 @@ class App(tk.Frame):
             outputEntries.append((field, var))
             i += 1
 
-        row = tk.Frame(outputFileFrame)
-        row.pack()
+        # Give textbox to name your output file
+        filePath = []
+        row = tk.Frame(outputFrame)
+        row.grid(row=ceil(i/2), column=0, columnspan=2)
         ent = tk.Entry(row)
-        ent.pack(side=tk.RIGHT, expand=tk.YES, fill=tk.X)
-        lab = tk.Label(row, width=30, text="filepath/filename", anchor="w")
-        lab.pacl(side=tk.LEFT)
+        ent.pack(side=tk.RIGHT, padx=25)
+        lab = tk.Label(row,text="filepath/filename")
+        lab.pack(side=tk.LEFT, padx=25)
+        filePath.append(("filepath",ent))
 
         # Add a text box at the bottom of the window, this is where the resulting query will be displayed
         row = tk.Frame(scriptFrame)
@@ -83,13 +83,13 @@ class App(tk.Frame):
         quitButton = tk.Button(row, text="QUIT", command=self.master.destroy, fg="red")
         quitButton.pack(side=tk.LEFT)
 
-        genButton = tk.Button(row, text="GENERATE SCRIPT", command=lambda: self.gen_script(queryEntries, outputEntries, textBox), fg="green")
+        genButton = tk.Button(row, text="GENERATE SCRIPT", command=lambda: self.gen_script(queryEntries, outputEntries, filePath, textBox), fg="green")
         genButton.pack(side=tk.LEFT)
 
         debugButton = tk.Button(row, text="debug", command=lambda: self.debug(outputEntries), fg="green")
         debugButton.pack(side=tk.LEFT)
 
-    def gen_script(self, queryEntries, outputEntries, textBox):
+    def gen_script(self, queryEntries, outputEntries, filePath, textBox):
         textBox.config(state="normal")
         textBox.delete("0.0", tk.END)
 
@@ -106,7 +106,7 @@ class App(tk.Frame):
                 elif queryEntries[i][0] == "End Date (yyyymmddhhMMSS)":
                     script += "--end "
                 elif queryEntries[i][0] == "Client Short ID":
-                    script += "--client-id "
+                    script += "--client-id bss/account/"
                 elif queryEntries[i][0] == "Message Type (MT, MO, NL)":
                     script += "--kind "
                 elif queryEntries[i][0] == "System Type (PE, XMS, CA, NOBILL)":
@@ -141,72 +141,83 @@ class App(tk.Frame):
                 i += 1
             else:
                 if outputEntries[i][0] == "Day":
-                    script += "2,"
+                    script += "associations.day,"
                 elif outputEntries[i][0] == "SinchMessageID":
-                    script += "3,"
+                    script += "associations.id,"
                 elif outputEntries[i][0] == "associations.kind":
-                    script += "4,"
+                    script += "associations.kind,"
                 elif outputEntries[i][0] == "Site (EU3C, EU1C, etc...)":
-                    script += "5,"
+                    script += "associations.site,"
                 elif outputEntries[i][0] == "Client Account ID":
-                    script += "6,"
+                    script += "client_account_id,"
                 elif outputEntries[i][0] == "Client Short ID":
-                    script += "7,"
+                    script += "client_account_internal_id,"
                 elif outputEntries[i][0] == "Connection ID":
-                    script += "8,"
+                    script += "client_account_list_connection_id,"
                 elif outputEntries[i][0] == "Connection Internal ID":
-                    script += "9,"
+                    script += "client_account_list_internal_id,"
                 elif outputEntries[i][0] == "Client ID":
-                    script += "10,"
+                    script += "client_id,"
                 elif outputEntries[i][0] == "ALC_ID":
-                    script += "11,"
+                    script += "data.alc_id,"
                 elif outputEntries[i][0] == "client_in":
-                    script += "12,"
+                    script += "data.client_in,"
                 elif outputEntries[i][0] == "client_out":
-                    script += "13,"
+                    script += "data.client_out,"
+                elif outputEntries[i][0] == "concat_id":
+                    script += "data.concat_id,"
+                elif outputEntries[i][0] == "concat_part":
+                    script += "data.concat_part,"
+                elif outputEntries[i][0] == "concat_parts":
+                    script += "data.concat_parts,"
                 elif outputEntries[i][0] == "country":
-                    script += "14,"
+                    script += "data.country,"
                 elif outputEntries[i][0] == "dfb_on":
-                    script += "15,"
+                    script += "data.dfb_on,"
                 elif outputEntries[i][0] == "dfb_rec":
-                    script += "16,"
+                    script += "data.dfb_rec,"
                 elif outputEntries[i][0] == "dr_error":
-                    script += "17,"
+                    script += "data.dr_error,"
                 elif outputEntries[i][0] == "MSISDN":
-                    script += "18,"
+                    script += "data.msisdn,"
                 elif outputEntries[i][0] == "Operator ID":
-                    script += "19,"
+                    script += "data.operator_id,"
                 elif outputEntries[i][0] == "State":
-                    script += "20,"
+                    script += "data.state,"
                 elif outputEntries[i][0] == "Status Ind":
-                    script += "21,"
+                    script += "data.status_ind,"
                 elif outputEntries[i][0] == "Supp In":
-                    script += "22,"
+                    script += "data.supp_in,"
                 elif outputEntries[i][0] == "Supp Out":
-                    script += "23,"
+                    script += "data.supp_out,"
                 elif outputEntries[i][0] == "Virtual Number":
-                    script += "24,"
+                    script += "data.vn,"
                 elif outputEntries[i][0] == "NPI":
-                    script += "25,"
+                    script += "data.vn_npi,"
                 elif outputEntries[i][0] == "TON":
-                    script += "26,"
+                    script += "data.vn_ton,"
                 elif outputEntries[i][0] == "Timestamp":
-                    script += "27,"
+                    script += "datetime,"
                 elif outputEntries[i][0] == "Batch ID":
-                    script += "28,"
+                    script += "id,"
                 elif outputEntries[i][0] == "Site (EU1X, EU3X, etc...)":
-                    script += "29,"
+                    script += "site,"
                 elif outputEntries[i][0] == "System":
-                    script += "30,"
+                    script += "system,"
                 elif outputEntries[i][0] == "Type":
-                    script += "31,"
+                    script += "type,"
 
                 i += 1
 
-        #Remove the trailing comma
-
+        # Remove the final comma
+        script = script[0:len(script) - 1]
 
         #If specified, add the filepath of the output file. Otherwise just print to console
+        if filePath[0][1].get() == "":
+            pass
+        else:
+            script = script + " > " + filePath[0][1].get()
+
 
         textBox.insert(tk.INSERT, script)
         textBox.config(state="disabled")
